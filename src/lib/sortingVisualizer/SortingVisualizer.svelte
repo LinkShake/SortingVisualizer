@@ -2,6 +2,8 @@
   import { quintOut } from "svelte/easing";
   import { crossfade } from "svelte/transition";
   import { flip } from "svelte/animate";
+  import type RandomArr from "../../types/RandomArray";
+  import { select_option } from "svelte/internal";
 
   const generateRandomArr = (
     length: number,
@@ -9,15 +11,19 @@
     min: number
   ): number[] => {
     const generatedArr: number[] = [];
-    for (let i = 0; i <= length; i++)
-      generatedArr.push(Math.floor(Math.random() * (max - min + 1)) + min);
+    //solution by following video: https://www.youtube.com/watch?v=giHb-w49yGU
+    while (generatedArr.length < length) {
+      const randomEl = Math.floor(Math.random() * (max - min + 1)) + min;
+      if (generatedArr.indexOf(randomEl) === -1) generatedArr.push(randomEl);
+    }
     return generatedArr;
   };
 
   let active = 0;
   let comparing = [0, 1];
   let finished = false;
-  let randomArr: number[] = generateRandomArr(5, 1, 1000);
+  let randomArr: number[] = generateRandomArr(20, 1, 1000);
+  let maxWidth = 500;
 
   const [send, receive] = crossfade({
     duration: (d) => Math.sqrt(d * 200),
@@ -113,38 +119,52 @@
     }
   };
 
-  const swap = (i, j) => {
+  const sleep = async (ms) => {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  };
+
+  const swap = async (i, j) => {
+    await sleep(Math.min(j, i) * 10);
+
     const tmp: number = randomArr[i];
     randomArr[i] = randomArr[j];
     randomArr[j] = tmp;
-    //setTimeout(() => (randomArr = randomArr), j * 100);
+    // setTimeout(() => (randomArr = randomArr), j * 100);
     randomArr = randomArr;
   };
 
-  const partition = (startIdx, endIdx) => {
+  const partition = async (startIdx, endIdx) => {
     let pivot: number = randomArr[endIdx];
+    let tmp;
 
     let i = startIdx - 1;
 
-    setTimeout(() => {
-      for (let j = startIdx; j < endIdx; j++) {
-        setTimeout(() => {
-          if (randomArr[j] < pivot) {
-            i++;
-            setTimeout(() => swap(i, j), j * 100);
-          }
-        }, i * 1000);
+    // setTimeout(() => {
+    for (let j = startIdx; j < endIdx; j++) {
+      // setTimeout(() => {
+      if (randomArr[j] < pivot) {
+        i++;
+        tmp = j;
+        // setTimeout(() => swap(i, j), endIdx * 100);
+        await swap(i, j);
       }
-    }, 500);
-    setTimeout(() => swap(i + 1, endIdx), i * 100);
+      // }, i * 1000);
+    }
+    // }, 500);
+
+    // setTimeout(() => swap(i + 1, endIdx), endIdx * 100);
+    await swap(i + 1, endIdx);
     return i + 1;
   };
 
-  const onQuickSort = (startIdx, endIdx) => {
+  const onQuickSort = async (startIdx, endIdx) => {
     if (startIdx < endIdx) {
-      let pi = partition(startIdx, endIdx);
-      onQuickSort(startIdx, pi - 1);
-      onQuickSort(pi + 1, endIdx);
+      let pi = await partition(startIdx, endIdx);
+      // setTimeout(() => {
+      await onQuickSort(startIdx, pi - 1);
+      await onQuickSort(pi + 1, endIdx);
+
+      // Promise.all([onQuickSort(startIdx, pi - 1), onQuickSort(pi + 1, endIdx)]); // }, Math.min(startIdx, endIdx) * Math.max(startIdx, endIdx) * 50);
     }
   };
 </script>
@@ -159,7 +179,7 @@
       class:active={active === i}
       class:comparing={comparing[0] === i || comparing[1] === i}
       class:finished={finished === true}
-      style="height: {currElement}px;"
+      style="height: {currElement}px; width: {maxWidth / randomArr.length}px"
     >
       {currElement}
     </div>
@@ -182,9 +202,10 @@
 
 <style>
   .array-wrapper {
+    max-width: 100px;
     display: flex;
     flex-direction: row;
-    gap: 100px;
+    gap: 10px;
   }
   .array-element-bar {
     background-color: red;
