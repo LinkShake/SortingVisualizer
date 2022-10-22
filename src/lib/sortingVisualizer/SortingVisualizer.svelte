@@ -3,6 +3,22 @@
   import { crossfade } from "svelte/transition";
   import { flip } from "svelte/animate";
 
+  const generateRandomArr = (
+    length: number,
+    max: number,
+    min: number
+  ): number[] => {
+    const generatedArr: number[] = [];
+    for (let i = 0; i <= length; i++)
+      generatedArr.push(Math.floor(Math.random() * (max - min + 1)) + min);
+    return generatedArr;
+  };
+
+  let active = 0;
+  let comparing = [0, 1];
+  let finished = false;
+  let randomArr: number[] = generateRandomArr(5, 1, 1000);
+
   const [send, receive] = crossfade({
     duration: (d) => Math.sqrt(d * 200),
 
@@ -21,20 +37,11 @@
     },
   });
 
-  const generateRandomArr = (
-    length: number,
-    max: number,
-    min: number
-  ): number[] => {
-    const generatedArr: number[] = [];
-    for (let i = 0; i <= length; i++)
-      generatedArr.push(Math.floor(Math.random() * (max - min + 1)) + min);
-    return generatedArr;
-  };
-
   const onBubbleSort = () => {
     setTimeout(() => {
       for (let i = 0; i < randomArr.length; i++) {
+        active++;
+        //active = active;
         setTimeout(() => {
           for (let j = i; j <= randomArr.length; j++) {
             if (randomArr[i] > randomArr[j]) {
@@ -42,8 +49,12 @@
               randomArr[i] = randomArr[j];
               //   randomArr = randomArr;
               randomArr[j] = tmp;
-              setTimeout(() => (randomArr = randomArr), j * 100);
+              setTimeout(() => {
+                randomArr = randomArr;
+                //comparing = [j, i];
+              }, j * 100);
             }
+            //comparing = [j, i];
           }
         }, 1000 * i);
       }
@@ -102,16 +113,52 @@
     }
   };
 
-  let randomArr: number[] = generateRandomArr(5, 1, 1000);
+  const swap = (i, j) => {
+    const tmp: number = randomArr[i];
+    randomArr[i] = randomArr[j];
+    randomArr[j] = tmp;
+    //setTimeout(() => (randomArr = randomArr), j * 100);
+    randomArr = randomArr;
+  };
+
+  const partition = (startIdx, endIdx) => {
+    let pivot: number = randomArr[endIdx];
+
+    let i = startIdx - 1;
+
+    setTimeout(() => {
+      for (let j = startIdx; j < endIdx; j++) {
+        setTimeout(() => {
+          if (randomArr[j] < pivot) {
+            i++;
+            setTimeout(() => swap(i, j), j * 100);
+          }
+        }, i * 1000);
+      }
+    }, 500);
+    setTimeout(() => swap(i + 1, endIdx), i * 100);
+    return i + 1;
+  };
+
+  const onQuickSort = (startIdx, endIdx) => {
+    if (startIdx < endIdx) {
+      let pi = partition(startIdx, endIdx);
+      onQuickSort(startIdx, pi - 1);
+      onQuickSort(pi + 1, endIdx);
+    }
+  };
 </script>
 
 <div class="array-wrapper">
-  {#each randomArr as currElement (currElement)}
+  {#each randomArr as currElement, i (currElement)}
     <div
       in:send={{ key: currElement }}
       out:send={{ key: currElement }}
       animate:flip={{ duration: 200 }}
       class="array-element-bar"
+      class:active={active === i}
+      class:comparing={comparing[0] === i || comparing[1] === i}
+      class:finished={finished === true}
       style="height: {currElement}px;"
     >
       {currElement}
@@ -122,9 +169,15 @@
 <button class="btn--bubble-sort" on:click={onBubbleSort}> Bubble sort </button>
 <button
   class="btn--merge-sort"
-  on:click={() => onMergeSort(0, randomArr.length)}
+  on:click={() => onMergeSort(0, randomArr.length - 1)}
 >
   Merge sort
+</button>
+<button
+  class="btn--quick-sort"
+  on:click={() => onQuickSort(0, randomArr.length - 1)}
+>
+  Quick sort
 </button>
 
 <style>
@@ -135,5 +188,14 @@
   }
   .array-element-bar {
     background-color: red;
+  }
+  .active {
+    background-color: blue;
+  }
+  .comparing {
+    background-color: black;
+  }
+  .finished {
+    background-color: green;
   }
 </style>
