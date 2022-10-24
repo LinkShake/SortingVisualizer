@@ -2,7 +2,6 @@
   import { quintOut } from "svelte/easing";
   import { crossfade } from "svelte/transition";
   import { flip } from "svelte/animate";
-  import type RandomArr from "../../types/RandomArray";
   import { select_option } from "svelte/internal";
 
   const generateRandomArr = (
