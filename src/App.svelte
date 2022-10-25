@@ -1,6 +1,4 @@
 <script lang="ts">
-  import svelteLogo from "./assets/svelte.svg";
-  import Counter from "./lib/Counter.svelte";
   import SortingVisualizer from "./lib/sortingVisualizer/SortingVisualizer.svelte";
   import NavBar from "./lib/NavBar.svelte";
 </script>
@@ -28,7 +26,7 @@
     Click on the Vite and Svelte logos to learn more
   </p> -->
   <SortingVisualizer />
-  <NavBar />
+  <!-- <NavBar /> -->
 </main>
 
 <!-- <style>

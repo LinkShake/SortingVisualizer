@@ -186,12 +186,13 @@
 </div>
 
 <button class="btn--bubble-sort" on:click={onBubbleSort}> Bubble sort </button>
-<button
+<!-- currently mergeSort algorithm doesn't work -->
+<!-- <button
   class="btn--merge-sort"
   on:click={() => onMergeSort(0, randomArr.length - 1)}
 >
   Merge sort
-</button>
+</button> -->
 <button
   class="btn--quick-sort"
   on:click={() => onQuickSort(0, randomArr.length - 1)}
